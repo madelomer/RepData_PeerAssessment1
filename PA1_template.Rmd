@@ -5,21 +5,87 @@ output:
     keep_md: true
 ---
 
-
 ## Loading and preprocessing the data
-
-
+```{r reading data}
+activity <- read.csv("activity.csv")
+activity$date <- as.Date(activity$date)
+```
 
 ## What is mean total number of steps taken per day?
+```{r mean median}
+step_per_day <- aggregate(steps ~ date, activity, sum, na.rm = TRUE)
+mean (step_per_day$steps,na.rm = TRUE)
+median (step_per_day$steps,na.rm = TRUE)
+
+StepsSum <- aggregate(steps ~ date,activity,sum)
+hist(StepsSum$steps, xlab = "Steps", main = "Histgram of Steps")
+```
 
 
 
 ## What is the average daily activity pattern?
 
+```{r daily activity pattern}
+steps_interval <- aggregate(steps ~ interval ,activity,mean)
+
+plot(steps_interval$interval,steps_interval$steps,type = "l",
+       xlab = "Interval", 
+       ylab = "Average number of steps",
+       main = "Average daily activity pattern")
+```
 
 
 ## Imputing missing values
+```{r Imputing}
+new_activity = activity
+for(dr in 1:nrow(new_activity))
+{
+  if(is.na (activity[dr,"steps"]))
+    new_activity$steps[dr] = steps_interval[steps_interval$interval ==    activity[dr,"interval"],"steps"]
+
+}
+
+Impute_agg <- aggregate(steps ~ date ,new_activity,sum)
+
+hist(Impute_agg$steps,xlab = "Steps", 
+       main = "Histgram of Steps after missing values are imputed")
+mean(Impute_agg$steps,na.rm = TRUE)
+median(Impute_agg$steps,na.rm = TRUE)
+
+
+
+```
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r weekdays and weekends}
+activityDateType <- activity
+for(i in 1:nrow(activityDateType))
+{
+  Type <- weekdays(activityDateType[i,"date"])
+  if(Type == "Saturday" | Type == "Sunday")
+  {
+    activityDateType$Type[i] <- "weekend"
+  }
+  else
+  {
+    activityDateType$Type [i]<- "weekday"
+  }
+}
+test <- unique(activityDateType$Type)
+weekend_date <- activityDateType[activityDateType$Type=="weekend",]
+weekday_date <- activityDateType[activityDateType$Type=="weekday",]  
+
+weekend_date_steps_interval <- aggregate(steps ~ interval ,weekend_date,sum)
+weekday_date_steps_interval <- aggregate(steps ~ interval ,weekday_date,sum)
+
+plot(weekend_date_steps_interval$interval,weekend_date_steps_interval$steps,type = "l",xlab = "Interval", 
+       ylab = "Average number of steps",
+       main = "Average Number of Steps (weekend)")
+plot(weekday_date_steps_interval$interval,weekday_date_steps_interval$steps,type = "l", xlab = "Interval", 
+       ylab = "Average number of steps",
+       main = "Average Number of Steps (weekday)")
+
+```
+
